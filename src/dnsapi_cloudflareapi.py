@@ -20,10 +20,11 @@
 # Uses the 'python-cloudflare' package.
 
 # Requires:
-# dnsapi_data[0]        : Global API key
-# dnsapi_data[1]        : Email address
+# dnsapi_data[0]        : Global API key (Optional)
+# dnsapi_data[1]        : Email address or empty if using API Token
 # dnsapi_domain_data[0] : Zone ID
 # dnsapi_domain_data[1] : TTL in seconds, automatic if not specified
+# dnsapi_domain_data[2] : API Token if dnsapi_data[0] is empty
 # key_data['plain']     : TXT record value in plain unquoted format
 
 # Parameters:
@@ -39,11 +40,12 @@ import CloudFlare
 
 
 def add( dnsapi_data, dnsapi_domain_data, key_data, debugging = False ):
-    if len( dnsapi_data ) < 2:
-        logging.error( "DNS API Cloudflare: API credentials not configured" )
-        return False,
-    api_key = dnsapi_data[0]
-    email = dnsapi_data[1]
+    api_key = None
+    if len( dnsapi_data ) > 0:
+        api_key = dnsapi_data[0]
+    email = None
+    if len( dnsapi_data ) > 1:
+        email = dnsapi_data[1]
     if len( dnsapi_domain_data ) < 1:
         logging.error( "DNS API Cloudflare: domain data does not contain zone ID" )
         return False,
@@ -57,6 +59,11 @@ def add( dnsapi_data, dnsapi_domain_data, key_data, debugging = False ):
             ttl = 1
     else:
         ttl = 1
+    if len( dnsapi_domain_data ) > 2:
+        api_key = dnsapi_domain_data[2]
+    if api_key == None:
+        logging.error( "DNS API Cloudflare: API credentials not configured" )
+        return False,
     try:
         selector = key_data['selector']
         data = key_data['plain']
