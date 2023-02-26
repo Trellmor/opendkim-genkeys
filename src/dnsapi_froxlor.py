@@ -67,36 +67,25 @@ def add( dnsapi_data, dnsapi_domain_data, key_data, debugging = False ):
         return False,
     if debugging:
         return True, key_data['domain'], selector
-    
+
     hdr = {
         'Content-Type': 'application/json'
     }
     body = {
-        'header': {
-            'apikey': api_key,
-            'secret': api_secret
-        },
-        'body': {
-            'command': 'DomainZones.add',
-            'params': {
-                'domainname': domain,
-                'record': selector + '._domainkey',
-                'type': 'TXT',
-                'content': data,
-                'ttl': ttl
-            }
+        'command': 'DomainZones.add',
+        'params': {
+            'domainname': domain,
+            'record': selector + '._domainkey',
+            'type': 'TXT',
+            'content': data,
+            'ttl': ttl
         }
     }
-    resp = requests.post( api_endpoint, json = body, headers = hdr )
+    resp = requests.post( api_endpoint, json = body, headers = hdr, auth=(api_key, api_secret) )
     logging.info( "HTTP status: %d", resp.status_code )
 
     if resp.status_code == requests.codes.ok:
-        success = resp.json()['status']
-        if success == 200:
-            result = True, key_data['domain'], selector, datetime.datetime.utcnow()
-        else:
-            result = False,
-            logging.error( "DNS API cloudflare: failure:\n%s", resp.text )
+        result = True, key_data['domain'], selector, datetime.datetime.utcnow()
     else:
         result = False,
         logging.error( "DNS API froxlor: HTTP error %d", resp.status_code )
